@@ -1,9 +1,9 @@
 const crypto = require('crypto')
-module.exports = function validateNewBlock(newBlock, previousBlock) {
+module.exports = function validateNewBlock(newBlock, previousBlock, callback) {
   var calchash = calculateHash(newBlock).toString()
   var blockhash = Buffer.from(newBlock.hash).toString()
   if(previousBlock.index + 1 !== newBlock.index) {
-    // console.log('invalid index', 'previousBlock: ' + previousBlock.index, "newBlock: " + newBlock.index)
+    console.log('invalid index', 'previousBlock: ' + previousBlock.index, "newBlock: " + newBlock.index)
     return false
   }
   else if(previousBlock.hash.toString() !== newBlock.previousHash.toString()) {
@@ -15,8 +15,11 @@ module.exports = function validateNewBlock(newBlock, previousBlock) {
     console.log("invalid hash: "+ hash + " " + Buffer.from(newBlock.hash))
     return false
   }
-  else if(werk(newBlock)) {
-      return nonce
+
+  else {
+      werk(newBlock, (data) => {
+        callback(data)
+      })
   }
 
 }
@@ -32,9 +35,10 @@ function calculateHash(newBlock) {
 }
 
 
-function werk(newBlock) {
+function werk(newBlock, callback) {
   var nonce = Math.random().toString()
   var cry = crypto.createHash('sha256')
+  console.log(nonce)
   cry.update(newBlock.index.toString() +
              newBlock.timestamp.toString() +
              newBlock.data.toString() +
@@ -42,11 +46,12 @@ function werk(newBlock) {
              nonce)
               var hash = cry.digest()
               hash = hash.toString('hex')
-              console.log(hash[0], hash[1])
   if(hash[0] === '0' && hash[1] === "0") {
-    return nonce
+    console.log('match')
+    console.log(nonce, 'this is nonce')
+     callback(nonce)
   }
   else {
-    werk(newBlock)
+    werk(newBlock, callback)
   }
 }
